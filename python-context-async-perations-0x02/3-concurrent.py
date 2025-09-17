@@ -28,7 +28,7 @@ async def fetch_concurrently():
     print(users) 
     
     print("\nUsers older than 40:")
-    #print to the terminal
+    #print to the terminals
     print(older_users)  
 
 if __name__ == "__main__":
