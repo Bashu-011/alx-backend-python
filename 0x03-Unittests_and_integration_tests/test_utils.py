@@ -4,6 +4,8 @@
 import unittest
 from typing import Mapping, Sequence, Any, Dict, Tuple
 from parameterized import parameterized
+from unittest.mock import patch, MagicMock
+from utils import get_json
 from utils import access_nested_map
 
 
@@ -47,6 +49,33 @@ class TestAccessNestedMap(unittest.TestCase):
         # Check keyError message is as expected
         self.assertEqual(str(cm.exception), f"'{missing_key}'")
 
+
+class TestGetJson(unittest.TestCase):
+    """Tests for the get_json()"""
+
+    @parameterized.expand([
+        ("http://example.com", {"payload": True}),
+        ("http://holberton.io", {"payload": False}),
+    ])
+    @patch('requests.get')  #mocking the request
+    def test_get_json(self, test_url: str, test_payload: dict, mock_get: MagicMock) -> None:
+        """Test that get_json returns the expected result without making an actual HTTP call."""
+
+        #create a mock json
+        mock_response = MagicMock()
+        mock_response.json.return_value = test_payload
+
+        #return mock responses
+        mock_get.return_value = mock_response
+
+        #use the getJson func
+        result = get_json(test_url)
+
+        #ensure that the mock is called only once
+        mock_get.assert_called_once_with(test_url)
+
+        #result is the same as the payload
+        self.assertEqual(result, test_payload)
 
 
 if __name__ == "__main__":
