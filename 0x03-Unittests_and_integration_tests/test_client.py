@@ -12,9 +12,9 @@ import unittest
 from unittest.mock import Mock, patch, PropertyMock
 from parameterized import parameterized
 
-from client import GithubOrgClient
+from client import TEST_PAYLOAD, GithubOrgClient
 
-
+@parameterized_class(('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'), TEST_PAYLOAD)
 class TestGithubOrgClient(unittest.TestCase):
     """Unit tests for the GithubOrgClient class"""
 
@@ -82,7 +82,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     # Extract the fixture values
 
-    
+    @classmethod
     def setUpClass(cls):
         """Mock requests.get"""
         cls.get_patcher = patch('client.requests.get')
