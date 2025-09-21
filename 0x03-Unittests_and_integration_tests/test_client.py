@@ -39,3 +39,6 @@ class TestGithubOrgClient(unittest.TestCase):
 
         #assert the result
         self.assertEqual(result, test_payload)
+
+if __name__ == "__main__":
+    unittest.main()
