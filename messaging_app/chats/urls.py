@@ -15,8 +15,8 @@ conversation_router = NestedDefaultRouter(router, r'conversations', lookup='conv
 conversation_router.register(r'messages', MessageViewSet, basename='conversation-messages')
 
 urlpatterns = [
-    path('', include(router.urls)), 
-    path('', include(conversation_router.urls)), 
+    # path('', include(router.urls)), 
+    # path('', include(conversation_router.urls)), 
     path('admin/', admin.site.urls),
     path('api/', include('messaging_app.chats.urls')),  
     path('api-auth/', include('rest_framework.urls')),  
