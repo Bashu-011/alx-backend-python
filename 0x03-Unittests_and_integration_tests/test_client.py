@@ -4,7 +4,7 @@
 import unittest
 from typing import Mapping, Sequence, Any, Dict, Tuple
 from parameterized import parameterized
-from unittest.mock import patch, MagicMock
+from unittest.mock import PropertyMock, patch, MagicMock
 from utils import get_json
 from utils import access_nested_map
 from utils import memoize
@@ -40,5 +40,24 @@ class TestGithubOrgClient(unittest.TestCase):
         #assert the result
         self.assertEqual(result, test_payload)
 
-if __name__ == "__main__":
-    unittest.main()
+    
+    def test_public_repos_url(self):
+        """
+        Test that _public_repos_url will return the correct URL
+        based on the mocked property.
+        """
+        #fake payload for the property
+        test_payload = {"repos_url": "https://api.github.com/orgs/google/repos"}
+
+        #patch the org property
+        with patch(
+            "client.GithubOrgClient.org",
+            new_callable=PropertyMock,
+        ) as mock_org:
+            mock_org.return_value = test_payload
+
+            client = GithubOrgClient("google")
+            result = client._public_repos_url
+
+            #assert that they are matching
+            self.assertEqual(result, test_payload["repos_url"])
