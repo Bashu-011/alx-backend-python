@@ -9,7 +9,7 @@ This module contains unit tests for:
 """
 
 import unittest
-from unittest.mock import patch, PropertyMock
+from unittest.mock import Mock, patch, PropertyMock
 from parameterized import parameterized
 
 from client import GithubOrgClient
@@ -80,4 +80,38 @@ class TestGithubOrgClient(unittest.TestCase):
         """Test GithubOrgClient.has_license method with different licenses"""
         self.assertEqual(GithubOrgClient.has_license(repo, license_key), expected)
 
+    # Extract the fixture values
+
     
+    def setUpClass(cls):
+        """Mock requests.get"""
+        cls.get_patcher = patch('client.requests.get')
+        cls.mock_get = cls.get_patcher.start()
+        
+        #define a side_effect function to return different urls
+        def get_side_effect(url, *args, **kwargs):
+            mock_resp = Mock()
+            if url == cls.org_payload['repos_url']:
+                mock_resp.json.return_value = cls.repos_payload
+            else:
+                mock_resp.json.return_value = {}
+            return mock_resp
+
+        cls.mock_get.side_effect = get_side_effect
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop patching requests.get"""
+        cls.get_patcher.stop()
+
+    def test_public_repos(self):
+        """Test that public_repos returns the correct repo names"""
+        client = GithubOrgClient('google')
+        repos = client.public_repos()
+        self.assertEqual(repos, self.expected_repos)
+
+    def test_public_repos_with_license(self):
+        """Filtering repositories by license"""
+        client = GithubOrgClient('google')
+        repos = client.public_repos(license='apache-2.0')
+        self.assertEqual(repos, self.apache2_repos)
