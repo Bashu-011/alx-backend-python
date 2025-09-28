@@ -8,14 +8,15 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import Conversation, Message, User
 from .serializers import ConversationSerializer, MessageSerializer
-from .permissions import IsOwner  
+from .permissions import IsOwner, IsParticipantOfConversation  
 
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['participants__username']
-    permission_classes = [IsAuthenticated, IsOwner]  
+    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsParticipantOfConversation]  
 
     @action(detail=False, methods=['post'])
     def create_conversation(self, request):
@@ -42,15 +43,28 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['message_body', 'sender__username']
-    permission_classes = [IsAuthenticated, IsOwner]  # 👈 Add here
+    permission_classes = [IsParticipantOfConversation] 
+
+    def get_queryset(self):
+        """
+        Limit messages so user only sees those in conversations they participate in.
+        """
+        conversation_id = self.kwargs.get("conversation_id")  
+        if conversation_id:
+            return Message.objects.filter(conversation_id=conversation_id)
+        return Message.objects.none()
 
     @action(detail=True, methods=['post'])
     def send_message(self, request, pk=None):
         try:
             conversation = Conversation.objects.get(id=pk)
         except Conversation.DoesNotExist:
-            return Response({"error": "Conversation not found."},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Conversation not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        #is user a participant
+        if request.user not in conversation.participants.all():
+            return Response({"error": "You are not allowed to send messages to this conversation."},
+                            status=status.HTTP_403_FORBIDDEN)  
 
         sender_id = request.data.get('sender_id')
         message_body = request.data.get('message_body')
