@@ -94,3 +94,24 @@ class OffensiveLanguageMiddleware:
         else:
             ip = request.META.get("REMOTE_ADDR")
         return ip
+    
+class RolePermissionMiddleware:
+    """
+    Checks if a user has the role of admin or moderator
+    before allowing access to certain actions.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+
+        #enforce if user is authenticated
+        if user and user.is_authenticated:
+            if not (user.is_staff or user.is_superuser):
+                return HttpResponseForbidden(
+                    "You do not have permission to perform this action."
+                )
+
+        return self.get_response(request)
