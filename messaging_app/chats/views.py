@@ -1,4 +1,6 @@
 # messaging_app/chats/views.py
+from messaging_app.chats.filters import MessageFilter
+from messaging_app.chats.pagination import MessagePagination
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
@@ -42,8 +44,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = MessageFilter
     search_fields = ['message_body', 'sender__username']
-    permission_classes = [IsParticipantOfConversation] 
+    permission_classes = [IsParticipantOfConversation]
+    pagination_class = MessagePagination 
 
     def get_queryset(self):
         """
