@@ -1,3 +1,4 @@
+from collections import defaultdict, deque
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -50,3 +51,46 @@ class RestrictAccessByTimeMiddleware:
             return HttpResponseForbidden("Access to this app is restricted at this time")
 
         return self.get_response(request)
+    
+class OffensiveLanguageMiddleware:
+    """
+    Limits number of POST requests
+    per IP address
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        #track requests
+        self.request_log = defaultdict(deque)
+        self.limit = 5              
+        self.time_window = 60       
+
+    def __call__(self, request):
+        if request.method == "POST" and "/messages" in request.path:
+            #client IP
+            ip = self.get_client_ip(request)
+            now = datetime.now()
+
+    
+            while self.request_log[ip] and (now - self.request_log[ip][0]).seconds > self.time_window:
+                self.request_log[ip].popleft()
+
+            #user exceeded limi
+            if len(self.request_log[ip]) >= self.limit:
+                return HttpResponseForbidden(
+                    "Rate limit exceeded: You can only send 5 messages per minute."
+                )
+
+            #log request
+            self.request_log[ip].append(now)
+
+        return self.get_response(request)
+
+    def get_client_ip(self, request):
+        """Helper to get client IP address from request headers"""
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        return ip

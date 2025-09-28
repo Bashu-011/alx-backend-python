@@ -78,6 +78,7 @@ MIDDLEWARE = [
     'messaging_app.chats.middleware.RequestLoggingMiddleware', 
     'chats.middleware.RequestLoggingMiddleware',
     'chats.middleware.RestrictAccessByTimeMiddleware',
+    'chats.middleware.OffensiveLanguageMiddleware', 
 ]
 
 AUTH_USER_MODEL = 'chats.User'
