@@ -49,3 +49,7 @@ def serialize_message(message):
         "timestamp": message.timestamp,
         "replies": [serialize_message(reply) for reply in message.replies.all()],
     }
+
+def inbox(request):
+    unread_messages = Message.unread.for_user(request.user)
+    return render(request, "messaging/inbox.html", {"unread_messages": unread_messages})

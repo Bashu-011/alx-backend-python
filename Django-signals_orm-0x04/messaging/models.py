@@ -8,6 +8,7 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False)
+    read = models.BooleanField(default=False)
 
     #for threading messages
     parent_message = models.ForeignKey(
@@ -17,6 +18,9 @@ class Message(models.Model):
         related_name="replies",
         on_delete=models.CASCADE
     )
+
+    objects = models.Manager()  
+    unread = UnreadMessagesManager()  
 
     def __str__(self):
         return f"From {self.sender} to {self.receiver}: {self.content[:30]}"
@@ -39,4 +43,10 @@ class MessageHistory(models.Model):
 
     def __str__(self):
         return f"History for Message {self.message.id} at {self.edited_at}"
+
+class UnreadMessagesManager(models.Manager):
+    def for_user(self, user):
+        #get unread messages
+        return self.filter(receiver=user, read=False).only("id", "sender", "content", "timestamp")
+
 
