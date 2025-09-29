@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.decorators.cache import cache_page
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
@@ -57,3 +58,18 @@ def inbox(request):
     """
     unread_qs = Message.unread.unread_for_user(request.user).select_related('sender').only('id', 'sender', 'content', 'timestamp')
     return render(request, 'messaging/inbox.html', {'unread_messages': unread_qs})
+
+@login_required
+@cache_page(60)  #cache this for 60 sec
+def conversation(request, user_id):
+    """
+    All messages in a conversation between the logged-in user
+    and another user, cached for 60 seconds.
+    """
+    other_user = get_object_or_404(User, pk=user_id)
+    messages = Message.objects.filter(
+        sender__in=[request.user, other_user],
+        receiver__in=[request.user, other_user]
+    ).select_related('sender', 'receiver').order_by('timestamp')
+
+    return render(request, 'chats/conversation.html', {'messages': messages, 'other_user': other_user})
