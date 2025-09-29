@@ -50,6 +50,10 @@ def serialize_message(message):
         "replies": [serialize_message(reply) for reply in message.replies.all()],
     }
 
+@login_required
 def inbox(request):
-    unread_messages = Message.unread.for_user(request.user)
-    return render(request, "messaging/inbox.html", {"unread_messages": unread_messages})
+    """
+    Display only unread messages for the logged-in user.
+    """
+    unread_qs = Message.unread.unread_for_user(request.user).select_related('sender').only('id', 'sender', 'content', 'timestamp')
+    return render(request, 'messaging/inbox.html', {'unread_messages': unread_qs})
