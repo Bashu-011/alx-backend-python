@@ -33,3 +33,18 @@ def log_message_edit(sender, instance, **kwargs):
                 instance.edited = True
         except Message.DoesNotExist:
             pass
+
+@receiver(post_delete, sender=User)
+def cleanup_user_related_data(sender, instance, **kwargs):
+    """
+    When a user is deleted remove related messages, notifications,
+    and message histories
+    """
+    #delete the messages
+    Message.objects.filter(sender=instance).delete()
+    Message.objects.filter(receiver=instance).delete()
+
+    #delete the notifications
+    Notification.objects.filter(user=instance).delete()
+
+    MessageHistory.objects.filter(edited_by=instance).delete()
