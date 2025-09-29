@@ -1,3 +1,4 @@
+from mailbox import Message
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -17,3 +18,34 @@ def delete_user(request):
         {"details": f"User '{username}' and related data deleted."},
         status=status.HTTP_204_NO_CONTENT,
     )
+
+
+def conversation_messages(request, conversation_id):
+    """
+    Get messages in a conversation with proper queries
+    """
+    messages = (
+        Message.objects.filter(conversation_id=conversation_id, parent_message__isnull=True)
+        .select_related("sender", "receiver")      
+        .prefetch_related("replies")               # optimize replies fetching
+    )
+
+    data = []
+    for msg in messages:
+        data.append(serialize_message(msg))
+
+    return JsonResponse(data, safe=False)
+
+
+def serialize_message(message):
+    """
+    Serialize a message and its ralated replies
+    """
+    return {
+        "id": message.id,
+        "sender": message.sender.username,
+        "receiver": message.receiver.username,
+        "content": message.content,
+        "timestamp": message.timestamp,
+        "replies": [serialize_message(reply) for reply in message.replies.all()],
+    }
