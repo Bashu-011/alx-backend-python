@@ -15,6 +15,8 @@ COPY . /app/
 
 # Step 6: Expose the port that Django runs on
 EXPOSE 8000
+# docker run -p 8000:8000 messaging_app
+
 
 # Step 7: Run the Django app
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
