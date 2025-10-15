@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: messaging-container
-          image: bashu/messaging_app:1.0
+          image: bashu/messaging_app:2.0
           ports:
             - containerPort: 8000
           resources:
