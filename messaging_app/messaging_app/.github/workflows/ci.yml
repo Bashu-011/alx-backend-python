@@ -61,6 +61,21 @@ jobs:
             sleep 5
           done
 
+      - name: Run Flake8 Linting
+        run: |
+          echo "Running flake8 lint checks..."
+          # Fail build if any lint errors occur
+          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 messaging_app --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+
+      - name: Run Flake8 Linting
+        run: |
+          echo "Flake8 lint checks"
+          # Build fails if any errors occur
+          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 messaging_app --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+
+
       - name: Run Django tests
         run: |
           python manage.py migrate --noinput
